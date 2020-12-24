@@ -1,0 +1,14 @@
+<h2><%%= @title %></h2>
+
+<%%= f = form_for @changeset, "#",
+  id: "<%= schema.singular %>-form",
+  codegen_target: @myself,
+  codegen_change: "validate",
+  codegen_submit: "save" %>
+<%= for {label, input, error} <- inputs, input do %>
+  <%= label %>
+  <%= input %>
+  <%= error %>
+<% end %>
+  <%%= submit "Save", codegen_disable_with: "Saving..." %>
+</form>
