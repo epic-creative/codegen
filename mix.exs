@@ -21,7 +21,8 @@ defmodule Codegen.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:phoenix_html, "~> 2.14"}
+      {:phoenix_html, "~> 2.14"},
+      {:inflex, "~> 2.0.0"}
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
     ]

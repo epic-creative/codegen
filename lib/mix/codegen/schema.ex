@@ -2,37 +2,33 @@ defmodule Mix.Codegen.Schema do
   @moduledoc false
 
   alias Mix.Codegen.Schema
+  alias Mix.Codegen.Field
+  require IEx
 
-  defstruct module: nil,
-            repo: nil,
-            table: nil,
-            collection: nil,
+  defstruct fields: nil,
+            file: nil,
+            opts: [],
+            binary_id?: false,
             embedded?: false,
             generate?: true,
-            opts: [],
+            migration?: false,
+            migration_module: nil,
+            migration_name: nil,
+            repo: nil,
+            table: nil,
             alias: nil,
-            file: nil,
-            attrs: [],
-            string_attr: nil,
-            plural: nil,
-            singular: nil,
-            uniques: [],
-            assocs: [],
-            types: [],
-            indexes: [],
-            defaults: [],
+            app: nil,
+            context: nil,
+            collection: nil,
             human_singular: nil,
             human_plural: nil,
-            binary_id: false,
-            migration_defaults: nil,
-            migration?: false,
-            params: %{},
-            sample_id: nil,
-            web_path: nil,
-            web_namespace: nil,
-            context_app: nil,
+            module: nil,
+            name: nil,
+            plural: nil,
+            singular: nil,
             route_helper: nil,
-            migration_module: nil
+            web_path: nil,
+            web_namespace: nil
 
   @valid_types [
     :integer,
@@ -61,109 +57,95 @@ defmodule Mix.Codegen.Schema do
     schema =~ ~r/^[A-Z]\w*(\.[A-Z]\w*)*$/
   end
 
-  def new(schema_name, schema_plural, cli_attrs, opts) do
-    ctx_app = opts[:context_app] || Mix.Codegen.context_app()
+  def new(context, name, fields, opts) do
+    # Whereami?
     otp_app = Mix.Codegen.otp_app()
-    opts = Keyword.merge(Application.get_env(otp_app, :generators, []), opts)
-    base = Mix.Codegen.context_base(ctx_app)
-    basename = Codegen.Naming.underscore(schema_name)
-    module = Module.concat([base, schema_name])
-    repo = opts[:repo] || Module.concat([base, "Repo"])
-    file = Mix.Codegen.context_lib_path(ctx_app, basename <> ".ex")
-    table = opts[:table] || schema_plural
-    uniques = uniques(cli_attrs)
-    {assocs, attrs} = partition_attrs_and_assocs(module, attrs(cli_attrs))
-    types = types(attrs)
-    web_namespace = opts[:web] && Codegen.Naming.camelize(opts[:web])
-    web_path = web_namespace && Codegen.Naming.underscore(web_namespace)
-    embedded? = Keyword.get(opts, :embedded, false)
-    generate? = Keyword.get(opts, :schema, true)
+    app = Mix.Codegen.context_app()
+    base = Mix.Codegen.context_base(otp_app)
 
-    singular =
+    # Naming
+    module = Module.concat([base, name])
+    basename = Codegen.Naming.underscore(name)
+
+    name_singular =
       module
       |> Module.split()
       |> List.last()
       |> Codegen.Naming.underscore()
 
-    collection = if schema_plural == singular, do: singular <> "_collection", else: schema_plural
-    string_attr = string_attr(types)
-    create_params = params(attrs, :create)
+    name_plural = Inflex.pluralize(name)
+    human_singular = Codegen.Naming.humanize(name_singular)
+    human_plural = Codegen.Naming.humanize(name_plural)
+    name_alias = module |> Module.split() |> List.last() |> Module.concat(nil)
 
-    default_params_key =
-      case Enum.at(create_params, 0) do
-        {key, _} -> key
-        nil -> :some_field
-      end
+    collection =
+      if name_plural == name_singular, do: name_singular <> "_collection", else: name_plural
 
-    %Schema{
+    # Migration
+    table = opts[:table] || name_plural
+    repo = opts[:repo] || Module.concat([base, "Repo"])
+    migration_name = Macro.camelize(table)
+    migration_module = migration_module()
+
+    # File to generate
+    file = Mix.Codegen.context_lib_path(app, basename <> ".ex")
+
+    # Fields
+    {_, fields} =
+      Enum.map_reduce(fields, %{}, fn f, acc ->
+        field = Field.new(f)
+        {field, Map.put(acc, field.key, field)}
+      end)
+
+    # Web
+    web_namespace = opts[:web] && Codegen.Naming.camelize(opts[:web])
+    web_path = web_namespace && Codegen.Naming.underscore(web_namespace)
+    route_helper = route_helper(web_path, name_singular)
+
+    # TODO
+    # opts = Keyword.merge(Application.get_env(otp_app, :generators, []), opts)
+
+    schema = %Schema{
+      # Fields
+      fields: fields,
+
       # Helpers
       file: file,
       opts: opts,
-      sample_id: sample_id(opts),
 
       # Flags
-      binary_id?: opts[:binary_id],
-      embedded?: embedded?,
-      migration?: Keyword.get(opts, :migration, true),
-      generate?: generate?,
+      binary_id?: Map.get(opts, :binary_id, false),
+      embedded?: Map.get(opts, :embedded, false),
+      generate?: Map.get(opts, :generate, true),
+      migration?: Map.get(opts, :migration, true),
 
-      # Module
-      alias: module |> Module.split() |> List.last() |> Module.concat(nil),
-      collection: collection,
-      context_app: ctx_app,
-      human_singular: Codegen.Naming.humanize(singular),
-      human_plural: Codegen.Naming.humanize(schema_plural),
-      module: module,
-      migration_module: migration_module(),
-      plural: schema_plural,
+      # Migration
+      migration_module: migration_module,
+      migration_name: migration_name,
       repo: repo,
-      route_helper: route_helper(web_path, singular),
-      singular: singular,
       table: table,
-      web_namespace: web_namespace,
-      web_path: web_path,
 
-      # Fields
-      assocs: assocs,
-      attrs: attrs,
-      defaults: schema_defaults(attrs),
-      indexes: indexes(table, assocs, uniques),
-      migration_defaults: migration_defaults(attrs),
-      params: %{
-        create: create_params,
-        update: params(attrs, :update),
-        default_key: string_attr || default_params_key
-      },
-      string_attr: string_attr,
-      types: types,
-      uniques: uniques
+      # Naming
+      alias: name_alias,
+      app: app,
+      context: context,
+      collection: collection,
+      human_singular: human_singular,
+      human_plural: human_plural,
+      module: module,
+      name: name,
+      plural: name_plural,
+      singular: name_singular,
+
+      # Web
+      route_helper: route_helper,
+      web_namespace: web_namespace,
+      web_path: web_path
     }
 
-    ## Used in Schema Template ##
-    # binary_id?
-    # table
-    # singular
-    # module
-    #
-    # types
-    #   field_key, field_value
-    # defaults
-    #   [field_key]
-    # assocs
-    #   field_key
-    # attrs (list of fields)
-    # uniques
-    #   field_key
-
-    ## Used in Migration Template ##
-    # repo
-    # table
-    # migration_module
-    # binary_id?
-    # attrs
-    #   field_key, field_value
-    # assocs[]
-    # indexes[]
+    # IEx.pry()
+    IO.inspect(schema)
+    schema
   end
 
   @doc """
@@ -363,32 +345,32 @@ defmodule Mix.Codegen.Schema do
     end
   end
 
-  defp indexes(table, assocs, uniques) do
-    uniques = Enum.map(uniques, fn key -> {key, true} end)
-    assocs = Enum.map(assocs, fn {_, key, _, _} -> {key, false} end)
+  # defp indexes(table, assocs, uniques) do
+  #   uniques = Enum.map(uniques, fn key -> {key, true} end)
+  #   assocs = Enum.map(assocs, fn {_, key, _, _} -> {key, false} end)
 
-    (uniques ++ assocs)
-    |> Enum.uniq_by(fn {key, _} -> key end)
-    |> Enum.map(fn
-      {key, false} -> "create index(:#{table}, [:#{key}])"
-      {key, true} -> "create unique_index(:#{table}, [:#{key}])"
-    end)
-  end
+  #   (uniques ++ assocs)
+  #   |> Enum.uniq_by(fn {key, _} -> key end)
+  #   |> Enum.map(fn
+  #     {key, false} -> "create index(:#{table}, [:#{key}])"
+  #     {key, true} -> "create unique_index(:#{table}, [:#{key}])"
+  #   end)
+  # end
 
-  defp migration_defaults(attrs) do
-    Enum.into(attrs, %{}, fn
-      {key, :boolean} -> {key, ", default: false, null: false"}
-      {key, _} -> {key, ""}
-    end)
-  end
+  # defp migration_defaults(attrs) do
+  #   Enum.into(attrs, %{}, fn
+  #     {key, :boolean} -> {key, ", default: false, null: false"}
+  #     {key, _} -> {key, ""}
+  #   end)
+  # end
 
-  defp sample_id(opts) do
-    if Keyword.get(opts, :binary_id, false) do
-      Keyword.get(opts, :sample_binary_id, "11111111-1111-1111-1111-111111111111")
-    else
-      -1
-    end
-  end
+  # defp sample_id(opts) do
+  #   if Keyword.get(opts, :binary_id, false) do
+  #     Keyword.get(opts, :sample_binary_id, "11111111-1111-1111-1111-111111111111")
+  #   else
+  #     -1
+  #   end
+  # end
 
   defp route_helper(web_path, singular) do
     "#{web_path}_#{singular}"

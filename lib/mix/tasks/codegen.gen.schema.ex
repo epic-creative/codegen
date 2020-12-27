@@ -151,7 +151,7 @@ defmodule Mix.Tasks.Codegen.Gen.Schema do
   end
 
   @doc false
-  def copy_new_files(%Schema{context_app: ctx_app} = schema, paths, binding) do
+  def copy_new_files(%Schema{app: ctx_app} = schema, paths, binding) do
     files = files_to_be_generated(schema)
     Mix.Codegen.copy_from(paths, "priv/templates/codegen.gen.schema", binding, files)
 

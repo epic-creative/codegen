@@ -3,11 +3,11 @@ defmodule Codegen.Gen.Schema do
   @source_dir "priv/templates/codegen.gen.schema"
 
   require IEx
-  alias Mix.Codegen.Schema
+  alias Mix.Codegen.{Schema, Field}
 
   def build_list(list) do
     Enum.map(list.schemas, fn params ->
-      build(Map.put(params, :name, "#{list.context}.#{params.name}"))
+      build(Map.put(params, :context, list.context))
     end)
   end
 
@@ -22,12 +22,7 @@ defmodule Codegen.Gen.Schema do
       Mix.raise("mix codegen.gen.schema can only be run inside an application directory")
     end
 
-    context_app = Mix.Codegen.context_app()
-    schema = build_schema(params, [])
-
-    # schema = %{
-
-    # }
+    schema = Schema.new(params.context, params.name, params.fields, params)
     assigns = [schema: schema]
 
     templates = [
@@ -37,77 +32,25 @@ defmodule Codegen.Gen.Schema do
     templates =
       templates ++
         if schema.migration? do
+          timestamp = Map.get(params, :migration_timestamp, timestamp())
+
           [
             {:eex, "migration.exs",
              Mix.Codegen.context_app_path(
-               context_app,
-               "priv/repo/migrations/#{timestamp()}_create_#{schema.table}.exs"
+               Mix.Codegen.context_app(),
+               "priv/repo/migrations/#{timestamp}_create_#{schema.table}.exs"
              ), true, assigns}
           ]
         else
           []
         end
 
-    params = %{
-      assigns: [schema: schema],
+    %{
+      assigns: assigns,
       source_dir: @source_dir,
       template_paths: @template_paths,
       templates: templates
     }
-
-    IEx.pry()
-
-    params
-
-    # schema = build_schema(params, [])
-    # paths = Mix.Codegen.generator_paths()
-
-    # consider moving into a general method
-    # schema
-    # |> files_to_be_generated()
-    # |> Mix.Codegen.prompt_for_conflicts()
-
-    # schema
-    # |> copy_new_files(paths, schema: schema)
-    # |> print_shell_instructions()
-
-    # if schema.migration? do
-    #   migration_path =
-    #     Mix.Codegen.context_app_path(
-    #       ctx_app,
-    #       "priv/repo/migrations/#{timestamp()}_create_#{schema.table}.exs"
-    #     )
-
-    #   Mix.Codegen.copy_from(paths, "priv/templates/codegen.gen.schema", binding, [
-    #     {:eex, "migration.exs", migration_path}
-    #   ])
-    # end
-
-    # assigns = schema: schema
-    # params = %{
-    #   assigns: [schema: schema],
-    #   source_dir: @source_dir,
-    #   template_paths: @template_paths,
-    #   templates: [
-    #     {:eex, "schema.ex", schema.file, false, assigns},
-    #     {:eex, "migration.exs",
-    #      Path.join(test_prefix, "channels/#{assigns[:path]}_channel_test.exs"), true, assigns}
-    #   ]
-    # }
-
-    # if schema.migration? do
-    #   migration_path =
-    #     Mix.Codegen.context_app_path(
-    #       ctx_app,
-    #       "priv/repo/migrations/#{timestamp()}_create_#{schema.table}.exs"
-    #     )
-
-    #   params.templates =
-    #     params.templates ++
-    #       [
-    #         {:eex, "migration.exs", migration_path}
-    #       ]
-    # end
   end
 
   def generate(list) when is_list(list) do
@@ -115,6 +58,7 @@ defmodule Codegen.Gen.Schema do
 
     Enum.each(list, fn opts ->
       Mix.Codegen.write_templates(opts.template_paths, opts.source_dir, opts.templates)
+      # post_install(opts)
     end)
   end
 
