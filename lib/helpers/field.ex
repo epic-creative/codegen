@@ -1,7 +1,9 @@
-defmodule Mix.Codegen.Field do
-  @moduledoc false
+defmodule Codegen.Helper.Field do
+  @moduledoc """
+  Module to help
+  """
 
-  alias Mix.Codegen.Field
+  alias Codegen.Helper.Field
 
   defstruct name: nil,
             key: nil,

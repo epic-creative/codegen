@@ -1,9 +1,8 @@
-defmodule Mix.Codegen.Schema do
+defmodule Codegen.Helper.Schema do
   @moduledoc false
 
-  alias Mix.Codegen.Schema
-  alias Mix.Codegen.Field
-  require IEx
+  alias Codegen.Helper.Schema
+  alias Codegen.Helper.Field
 
   defstruct fields: nil,
             file: nil,
@@ -65,17 +64,17 @@ defmodule Mix.Codegen.Schema do
 
     # Naming
     module = Module.concat([base, name])
-    basename = Codegen.Naming.underscore(name)
+    basename = Codegen.Helper.Naming.underscore(name)
 
     name_singular =
       module
       |> Module.split()
       |> List.last()
-      |> Codegen.Naming.underscore()
+      |> Codegen.Helper.Naming.underscore()
 
     name_plural = Inflex.pluralize(name)
-    human_singular = Codegen.Naming.humanize(name_singular)
-    human_plural = Codegen.Naming.humanize(name_plural)
+    human_singular = Codegen.Helper.Naming.humanize(name_singular)
+    human_plural = Codegen.Helper.Naming.humanize(name_plural)
     name_alias = module |> Module.split() |> List.last() |> Module.concat(nil)
 
     collection =
@@ -98,8 +97,8 @@ defmodule Mix.Codegen.Schema do
       end)
 
     # Web
-    web_namespace = opts[:web] && Codegen.Naming.camelize(opts[:web])
-    web_path = web_namespace && Codegen.Naming.underscore(web_namespace)
+    web_namespace = opts[:web] && Codegen.Helper.Naming.camelize(opts[:web])
+    web_path = web_namespace && Codegen.Helper.Naming.underscore(web_namespace)
     route_helper = route_helper(web_path, name_singular)
 
     # TODO
@@ -305,7 +304,7 @@ defmodule Mix.Codegen.Schema do
       Enum.map(assocs, fn {key_id, {:references, source}} ->
         key = String.replace(Atom.to_string(key_id), "_id", "")
         base = schema_module |> Module.split() |> Enum.drop(-1)
-        module = Module.concat(base ++ [Codegen.Naming.camelize(key)])
+        module = Module.concat(base ++ [Codegen.Helper.Naming.camelize(key)])
         {String.to_atom(key), key_id, inspect(module), source}
       end)
 

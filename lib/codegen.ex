@@ -1,18 +1,10 @@
 defmodule Codegen do
   @moduledoc """
-  Documentation for `Codegen`.
+  Library to generate Code for Elixir projects
   """
 
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> Codegen.hello()
-      :world
-
-  """
-  def hello do
-    :world
+  @doc "Run the code generator with the passed configuration"
+  @spec
+  def run(config) do
   end
 end

@@ -1,7 +1,13 @@
 defmodule Codegen.Gen.Presence do
+  @moduledoc """
+  Generate a Phoenix Channel
+  """
+  @behaviour Codegen.Generator
+
   @template_paths [".", :codegen]
   @source_dir "priv/templates/codegen.gen.presence"
 
+  @impl Codegen.Generator
   def build_list(list) do
     Enum.map(list, fn name -> build(name) end)
   end

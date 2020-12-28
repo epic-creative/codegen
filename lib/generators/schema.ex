@@ -1,4 +1,6 @@
 defmodule Codegen.Gen.Schema do
+  @behaviour Codegen.Generator
+
   @template_paths [".", :codegen]
   @source_dir "priv/templates/codegen.gen.schema"
 
@@ -101,7 +103,7 @@ defmodule Codegen.Gen.Schema do
           "Expected the schema argument, #{inspect(schema)}, to be a valid module name"
         )
 
-      String.contains?(plural, ":") or plural != Codegen.Naming.underscore(plural) ->
+      String.contains?(plural, ":") or plural != Codegen.Helper.Naming.underscore(plural) ->
         help.raise_with_help(
           "Expected the plural argument, #{inspect(plural)}, to be all lowercase using snake_case convention"
         )

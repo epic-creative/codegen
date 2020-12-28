@@ -1,4 +1,4 @@
-defmodule Codegen.Naming do
+defmodule Codegen.Helper.Naming do
   @moduledoc """
   Conveniences for inflecting and working with names in Codegen.
   """
@@ -8,10 +8,10 @@ defmodule Codegen.Naming do
 
   ## Examples
 
-      iex> Codegen.Naming.resource_name(MyApp.User)
+      iex> Codegen.Helper.Naming.resource_name(MyApp.User)
       "user"
 
-      iex> Codegen.Naming.resource_name(MyApp.UserView, "View")
+      iex> Codegen.Helper.Naming.resource_name(MyApp.UserView, "View")
       "user"
 
   """
@@ -30,10 +30,10 @@ defmodule Codegen.Naming do
 
   ## Examples
 
-      iex> Codegen.Naming.unsuffix("MyApp.User", "View")
+      iex> Codegen.Helper.Naming.unsuffix("MyApp.User", "View")
       "MyApp.User"
 
-      iex> Codegen.Naming.unsuffix("MyApp.UserView", "View")
+      iex> Codegen.Helper.Naming.unsuffix("MyApp.UserView", "View")
       "MyApp.User"
 
   """
@@ -54,14 +54,14 @@ defmodule Codegen.Naming do
 
   ## Examples
 
-      iex> Codegen.Naming.underscore("MyApp")
+      iex> Codegen.Helper.Naming.underscore("MyApp")
       "my_app"
 
   In general, `underscore` can be thought of as the reverse of
   `camelize`, however, in some cases formatting may be lost:
 
-      Codegen.Naming.underscore "SAPExample"  #=> "sap_example"
-      Codegen.Naming.camelize   "sap_example" #=> "SapExample"
+      Codegen.Helper.Naming.underscore "SAPExample"  #=> "sap_example"
+      Codegen.Helper.Naming.camelize   "sap_example" #=> "SapExample"
 
   """
   @spec underscore(String.t()) :: String.t()
@@ -77,17 +77,17 @@ defmodule Codegen.Naming do
 
   ## Examples
 
-      iex> Codegen.Naming.camelize("my_app")
+      iex> Codegen.Helper.Naming.camelize("my_app")
       "MyApp"
 
-      iex> Codegen.Naming.camelize("my_app", :lower)
+      iex> Codegen.Helper.Naming.camelize("my_app", :lower)
       "myApp"
 
   In general, `camelize` can be thought of as the reverse of
   `underscore`, however, in some cases formatting may be lost:
 
-      Codegen.Naming.underscore "SAPExample"  #=> "sap_example"
-      Codegen.Naming.camelize   "sap_example" #=> "SapExample"
+      Codegen.Helper.Naming.underscore "SAPExample"  #=> "sap_example"
+      Codegen.Helper.Naming.camelize   "sap_example" #=> "SapExample"
 
   """
   @spec camelize(String.t()) :: String.t()
@@ -110,11 +110,11 @@ defmodule Codegen.Naming do
 
   ## Examples
 
-      iex> Codegen.Naming.humanize(:username)
+      iex> Codegen.Helper.Naming.humanize(:username)
       "Username"
-      iex> Codegen.Naming.humanize(:created_at)
+      iex> Codegen.Helper.Naming.humanize(:created_at)
       "Created at"
-      iex> Codegen.Naming.humanize("user_id")
+      iex> Codegen.Helper.Naming.humanize("user_id")
       "User"
 
   """

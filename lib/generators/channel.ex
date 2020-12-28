@@ -1,4 +1,9 @@
 defmodule Codegen.Gen.Channel do
+  @moduledoc """
+  Generate a Phoenix Channel
+  """
+  @behaviour Codegen.Generator
+
   @template_paths [".", :codegen]
   @source_dir "priv/templates/codegen.gen.channel"
 
