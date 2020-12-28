@@ -52,11 +52,11 @@ defmodule Mix.Tasks.Codegen.New do
           )
         end
 
-        ctx_app = opts[:context_app] || Mix.Codegen.context_app()
-        base = Module.concat([Mix.Codegen.context_base(ctx_app)])
+        ctx_app = opts[:context_app] || Codegen.context_app()
+        base = Module.concat([Codegen.context_base(ctx_app)])
 
-        # otp_app = Mix.Codegen.otp_app()
-        # app = Mix.Codegen.context_app()
+        # otp_app = Codegen.otp_app()
+        # app = Codegen.context_app()
         # require IEx
         # IEx.pry()
 

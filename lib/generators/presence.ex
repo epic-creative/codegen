@@ -18,10 +18,10 @@ defmodule Codegen.Gen.Presence do
       Mix.raise("mix codegen.gen.presence can only be run inside an application directory")
     end
 
-    context_app = Mix.Codegen.context_app()
-    otp_app = Mix.Codegen.otp_app()
-    web_prefix = Mix.Codegen.web_path(context_app)
-    inflections = Mix.Codegen.inflect(name)
+    context_app = Codegen.context_app()
+    otp_app = Codegen.otp_app()
+    web_prefix = Codegen.web_path(context_app)
+    inflections = Codegen.inflect(name)
 
     inflections =
       Keyword.put(inflections, :module, "#{inflections[:web_module]}.#{inflections[:scoped]}")
@@ -48,13 +48,13 @@ defmodule Codegen.Gen.Presence do
 
   def generate(list) when is_list(list) do
     Enum.each(list, fn opts ->
-      Mix.Codegen.write_templates(opts.template_paths, opts.source_dir, opts.templates)
+      Codegen.write_templates(opts.template_paths, opts.source_dir, opts.templates)
     end)
   end
 
   @impl Codegen.Generator
   def generate(opts) when is_map(opts) do
-    Mix.Codegen.write_templates(opts.template_paths, opts.source_dir, opts.templates)
+    Codegen.write_templates(opts.template_paths, opts.source_dir, opts.templates)
     post_install(opts)
   end
 

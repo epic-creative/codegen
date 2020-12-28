@@ -24,17 +24,17 @@ defmodule Codegen.Helper.Context do
   end
 
   def new(context_name, %Schema{} = schema, opts) do
-    ctx_app = opts[:context_app] || Mix.Codegen.context_app()
-    base = Module.concat([Mix.Codegen.context_base(ctx_app)])
+    ctx_app = opts[:context_app] || Codegen.context_app()
+    base = Module.concat([Codegen.context_base(ctx_app)])
     module = Module.concat(base, context_name)
     alias = Module.concat([module |> Module.split() |> List.last()])
     basedir = Codegen.Helper.Naming.underscore(context_name)
     basename = Path.basename(basedir)
-    dir = Mix.Codegen.context_lib_path(ctx_app, basedir)
+    dir = Codegen.context_lib_path(ctx_app, basedir)
     file = dir <> ".ex"
-    test_dir = Mix.Codegen.context_test_path(ctx_app, basedir)
+    test_dir = Codegen.context_test_path(ctx_app, basedir)
     test_file = test_dir <> "_test.exs"
-    test_fixtures_dir = Mix.Codegen.context_app_path(ctx_app, "test/support/fixtures")
+    test_fixtures_dir = Codegen.context_app_path(ctx_app, "test/support/fixtures")
     test_fixtures_file = Path.join([test_fixtures_dir, basedir <> "_fixtures.ex"])
     generate? = Keyword.get(opts, :context, true)
 
@@ -84,10 +84,10 @@ defmodule Codegen.Helper.Context do
   end
 
   defp web_module do
-    base = Mix.Codegen.base()
+    base = Codegen.base()
 
     cond do
-      Mix.Codegen.context_app() != Mix.Codegen.otp_app() ->
+      Codegen.context_app() != Codegen.otp_app() ->
         Module.concat([base])
 
       String.ends_with?(base, "Web") ->

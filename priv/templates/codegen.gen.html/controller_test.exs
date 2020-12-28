@@ -55,7 +55,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       assert redirected_to(conn) == Routes.<%= schema.route_helper %>_path(conn, :show, <%= schema.singular %>)
 
       conn = get(conn, Routes.<%= schema.route_helper %>_path(conn, :show, <%= schema.singular %>))<%= if schema.string_attr do %>
-      assert html_response(conn, 200) =~ <%= inspect Mix.Codegen.Schema.default_param(schema, :update) %><% else %>
+      assert html_response(conn, 200) =~ <%= inspect Codegen.Schema.default_param(schema, :update) %><% else %>
       assert html_response(conn, 200)<% end %>
     end
 

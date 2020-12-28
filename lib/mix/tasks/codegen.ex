@@ -1,145 +1,26 @@
 defmodule Mix.Tasks.Codegen do
+  use Mix.Task
+
+  @shortdoc "Prints Codegen help information"
+
   @moduledoc """
-
-  Runs Codegen based on input file.
-
-  This task does nothing on its own and requires another package
-  to implement the generation of code based on a template file.
-
-  Look at the `mix_codegen_ecto_migration` package for an example.
-
-  By default, a config file will be sourced from the
-  following locations, in order:
-
-    * $MIX_PROJECT_ROOT/config/codegen.json
-    * $MIX_PROJECT_ROOT/codegen.json
-
-  ## Examples
-
-    mix codegen help
-    mix codegen run
-    mix codegen run -f priv/gen/codegen.json
-    mix codegen run --input-file priv/gen/codegen.json
+  Prints Codegen tasks and their information.
+      mix codegen
   """
 
-  @shortdoc "Runs all defined Code Generation"
+  @doc false
+  def run(args) do
+    {_opts, args} = OptionParser.parse!(args, strict: [])
 
-  require Phoenix.HTML
-  import Phoenix.HTML
-  use Mix.Task
-  # alias MixCodegen, as: Codegen
-
-  @shortdoc "Run code generation tasks based upon input file"
-
-  @aliases [
-    h: :help,
-    f: :input_file
-  ]
-
-  @switches [
-    help: :boolean,
-    input_file: :string,
-    no_compile: :boolean,
-    no_deps_check: :boolean
-  ]
-  require IEx
-
-  @doc "Run the Mix.Codegen Task, parsing arguments and delegating to other methods to execute"
-  @spec run(map) :: none()
-  def run(_args) do
-    config = Application.get_all_env(:codegen)
-
-    # If empty list, throw an error
-    Enum.each(config, fn {type, config} -> run_codegen(type, config) end)
-
-    exit(:normal)
-  end
-
-  def run_codegen(:channel, config) do
-    alias Codegen.Gen.Channel
-
-    # Each configs
-    Channel.build_list(config)
-    |> Channel.generate()
-  end
-
-  def run_codegen(:presence, config) do
-    alias Codegen.Gen.Presence
-
-    # Each configs
-    Presence.build_list(config)
-    |> Presence.generate()
-  end
-
-  def run_codegen(:schema, config) do
-    # {Codegen.Schema, "schema.exs", &dest_path/1, false, &assigns_callback?}
-
-    alias Codegen.Gen.Schema
-
-    Schema.build_list(config)
-    |> Schema.generate()
-
-    # |> Codegen.write_files()
-
-    # Parse & validate the Args
-    # config
-
-    # Get the Template
-    # source = test_template
-    # source = template_from_file
-
-    # Create the assigns
-    # schema = %{repo: "Repo", table: "posts", migration_module: "Migration"}
-    # IEx.pry()
-
-    # Parse the template
-    # parsed = EEx.eval_string(source, schema: schema)
-
-    # Write the template
-    # IEx.pry()
-
-    # Codegen.Gen.Migration.init(config)
-    # |> Codegen.Gen.Migration.write_files
-    # |> Codegen.Gen.Migration.post_install
-    # Mix.Tasks.Codegen.Gen.Schema.run(["Blog.Post", "blog_posts", "title:string"])
-  end
-
-  def test_template do
-    ~S"""
-      Hello <%= "world" %>
-      <%= schema.repo %>
-    """
-  end
-
-  def run_codegen(_, config) do
-    IEx.pry()
-    {:error, :notfound}
-  end
-
-  @doc "Parse the incoming parameters to Mix.Codegen"
-  @spec parse_command({any(), any(), any()}) :: :help | :run
-  def parse_command({[], [], _}), do: {:run, :default}
-  def parse_command({[input_file: file], [], _}), do: {:run, file}
-  def parse_command({_, _, _}), do: :help
-
-  @doc "Execute either the :help or :run commands of Mix.Codegen"
-  @spec run_command(:help) :: any()
-  def run_command(:help), do: print_usage()
-
-  @spec run_command({:run, String.t()}) :: any()
-  def run_command({:run, file}) do
-    try do
-      IO.puts("Run file #{file}")
-      Codegen.codegen_from_file(file)
-    rescue
-      e in CodegenConfigNotFound -> Mix.shell().error(e.message)
-      e in CodegenConfigParseError -> Mix.shell().error(e.message)
+    case args do
+      [] -> general()
+      _ -> Mix.raise("Invalid arguments, expected: mix codegen")
     end
   end
 
-  defp print_usage() do
-    Mix.Task.get("codegen")
-    |> Mix.Task.moduledoc()
-    |> IO.puts()
+  defp general() do
+    Mix.shell().info("A code generation toolkit for Elixir.")
+    Mix.shell().info("\nAvailable tasks:\n")
+    Mix.Tasks.Help.run(["--search", "codegen."])
   end
 end

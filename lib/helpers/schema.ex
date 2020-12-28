@@ -58,9 +58,9 @@ defmodule Codegen.Helper.Schema do
 
   def new(context, name, fields, opts) do
     # Whereami?
-    otp_app = Mix.Codegen.otp_app()
-    app = Mix.Codegen.context_app()
-    base = Mix.Codegen.context_base(otp_app)
+    otp_app = Codegen.otp_app()
+    app = Codegen.context_app()
+    base = Codegen.context_base(otp_app)
 
     # Naming
     module = Module.concat([base, name])
@@ -87,7 +87,7 @@ defmodule Codegen.Helper.Schema do
     migration_module = migration_module()
 
     # File to generate
-    file = Mix.Codegen.context_lib_path(app, basename <> ".ex")
+    file = Codegen.context_lib_path(app, basename <> ".ex")
 
     # Fields
     {_, fields} =

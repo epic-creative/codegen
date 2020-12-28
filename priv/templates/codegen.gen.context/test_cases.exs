@@ -20,7 +20,7 @@
       valid_attrs = <%= inspect schema.params.create %>
 
       assert {:ok, %<%= inspect schema.alias %>{} = <%= schema.singular %>} = <%= inspect context.alias %>.create_<%= schema.singular %>(valid_attrs)<%= for {field, value} <- schema.params.create do %>
-      assert <%= schema.singular %>.<%= field %> == <%= Mix.Codegen.Schema.value(schema, field, value) %><% end %>
+      assert <%= schema.singular %>.<%= field %> == <%= Codegen.Schema.value(schema, field, value) %><% end %>
     end
 
     test "create_<%= schema.singular %>/1 with invalid data returns error changeset" do
@@ -32,7 +32,7 @@
       update_attrs = <%= inspect schema.params.update %>
 
       assert {:ok, %<%= inspect schema.alias %>{} = <%= schema.singular %>} = <%= inspect context.alias %>.update_<%= schema.singular %>(<%= schema.singular %>, update_attrs)<%= for {field, value} <- schema.params.update do %>
-      assert <%= schema.singular %>.<%= field %> == <%= Mix.Codegen.Schema.value(schema, field, value) %><% end %>
+      assert <%= schema.singular %>.<%= field %> == <%= Codegen.Schema.value(schema, field, value) %><% end %>
     end
 
     test "update_<%= schema.singular %>/2 with invalid data returns error changeset" do

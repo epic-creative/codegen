@@ -55,14 +55,14 @@ defmodule Mix.Tasks.Codegen.Run do
               Mix.raise("Couldn't find a codegen script to run with name #{name}.")
           end
 
-        ctx_app = opts[:context_app] || Mix.Codegen.context_app()
-        base = Module.concat([Mix.Codegen.context_base(ctx_app)])
+        ctx_app = opts[:context_app] || Codegen.context_app()
+        base = Module.concat([Codegen.context_base(ctx_app)])
         module = Module.concat([base, Codegen, Generate, camelize(name)])
 
         Code.eval_file(file)
-        codegen_config = module.config()
 
-        Codegen.run_codegen(config)
+        module.config()
+        |> Codegen.run()
 
       {_, _} ->
         Mix.raise(

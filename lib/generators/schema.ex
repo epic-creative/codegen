@@ -5,7 +5,7 @@ defmodule Codegen.Gen.Schema do
   @source_dir "priv/templates/codegen.gen.schema"
 
   require IEx
-  alias Mix.Codegen.{Schema, Field}
+  alias Codegen.{Schema, Field}
 
   def build_list(list) do
     Enum.map(list.schemas, fn params ->
@@ -38,8 +38,8 @@ defmodule Codegen.Gen.Schema do
 
           [
             {:eex, "migration.exs",
-             Mix.Codegen.context_app_path(
-               Mix.Codegen.context_app(),
+             Codegen.context_app_path(
+               Codegen.context_app(),
                "priv/repo/migrations/#{timestamp}_create_#{schema.table}.exs"
              ), true, assigns}
           ]
@@ -59,14 +59,14 @@ defmodule Codegen.Gen.Schema do
     ## TODO - Prompt for Conflicts
 
     Enum.each(list, fn opts ->
-      Mix.Codegen.write_templates(opts.template_paths, opts.source_dir, opts.templates)
+      Codegen.write_templates(opts.template_paths, opts.source_dir, opts.templates)
       # post_install(opts)
     end)
   end
 
   @impl Codegen.Generator
   def generate(opts) when is_map(opts) do
-    Mix.Codegen.write_templates(opts.template_paths, opts.source_dir, opts.templates)
+    Codegen.write_templates(opts.template_paths, opts.source_dir, opts.templates)
 
     post_install(opts)
   end
