@@ -125,6 +125,11 @@ defmodule Codegen.Helper.Field do
   def new({name, ref_type, table}) when ref_type in @ref_types,
     do: Field.new(name, :assoc, assoc_table: table)
 
+  def new(name, opts) do
+    type = Keyword.get(opts, :type, "string")
+    Field.new(name, type, opts)
+  end
+
   def new(name, type, opts \\ []) do
     unique? = Keyword.get(opts, :unique, false)
     assoc_table = Keyword.get(opts, :assoc_table, nil)

@@ -3,10 +3,11 @@ defmodule Codegen.Helper.Context do
 
   alias Codegen.Helper.Context
   alias Codegen.Helper.Schema
+  require IEx
 
   defstruct name: nil,
             module: nil,
-            schema: nil,
+            schemas: nil,
             alias: nil,
             base_module: nil,
             web_module: nil,
@@ -23,12 +24,12 @@ defmodule Codegen.Helper.Context do
     context =~ ~r/^[A-Z]\w*(\.[A-Z]\w*)*$/
   end
 
-  def new(context_name, %Schema{} = schema, opts) do
+  def new(name, schemas, opts) do
     ctx_app = opts[:context_app] || Codegen.context_app()
     base = Module.concat([Codegen.context_base(ctx_app)])
-    module = Module.concat(base, context_name)
+    module = Module.concat(base, name)
     alias = Module.concat([module |> Module.split() |> List.last()])
-    basedir = Codegen.Helper.Naming.underscore(context_name)
+    basedir = Codegen.Helper.Naming.underscore(name)
     basename = Path.basename(basedir)
     dir = Codegen.context_lib_path(ctx_app, basedir)
     file = dir <> ".ex"
@@ -36,12 +37,17 @@ defmodule Codegen.Helper.Context do
     test_file = test_dir <> "_test.exs"
     test_fixtures_dir = Codegen.context_app_path(ctx_app, "test/support/fixtures")
     test_fixtures_file = Path.join([test_fixtures_dir, basedir <> "_fixtures.ex"])
-    generate? = Keyword.get(opts, :context, true)
+    # generate? = Keyword.get(opts, :context, true)
+
+    schemas =
+      for {:schema, name, opts, fields} <- schemas do
+        Schema.new(ctx_app, name, fields, opts)
+      end
 
     %Context{
-      name: context_name,
+      name: name,
       module: module,
-      schema: schema,
+      schemas: schemas,
       alias: alias,
       base_module: base,
       web_module: web_module(),
@@ -50,7 +56,7 @@ defmodule Codegen.Helper.Context do
       test_file: test_file,
       test_fixtures_file: test_fixtures_file,
       dir: dir,
-      generate?: generate?,
+      # generate?: generate?,
       context_app: ctx_app,
       opts: opts
     }

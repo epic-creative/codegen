@@ -1,37 +1,44 @@
-defmodule Codegen.Gen.Schema do
+defmodule Codegen.Gen.Context do
   @behaviour Codegen.Generator
 
   @template_paths [".", :codegen]
-  @source_dir "priv/templates/codegen.gen.schema"
+  @source_dir "priv/templates/codegen.gen.context"
 
+  require IEx
   alias Codegen.{Generator, Template}
-  alias Codegen.Helper.{Schema, Field}
+  alias Codegen.Helper.{Context, Schema, Field}
 
   def build(context_list, opts \\ []) when is_list(context_list) do
-    for context <- context_list,
-        schema <- context.schemas do
-      build(schema, opts)
+    for context <- context_list do
+      build(context, opts)
     end
   end
 
   @impl Codegen.Generator
-  def build(schema = %Schema{}, opts) do
+  def build(%Context{} = context, opts) do
     if Mix.Project.umbrella?() do
-      Mix.raise("A Schema can only generated inside an application directory")
+      Mix.raise("mix codegen.gen.schema can only be run inside an application directory")
     end
+
+    assigns = [context: context]
+
+    templates = [
+      %Template{
+        source_path: "context.ex",
+        target_path: context.file,
+        assigns: assigns
+      },
+      %Template{
+        source_path: "context_test.ex",
+        target_path: context.test_file,
+        assigns: assigns
+      }
+    ]
 
     %Generator{
       source_dir: @source_dir,
       template_paths: @template_paths,
-      templates: [
-        %Template{
-          format: :eex,
-          source_path: "schema.ex",
-          target_path: schema.file,
-          force_overwrite?: false,
-          assigns: [schema: schema]
-        }
-      ]
+      templates: templates
     }
   end
 

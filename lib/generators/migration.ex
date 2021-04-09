@@ -1,11 +1,13 @@
-defmodule Codegen.Gen.Schema do
+defmodule Codegen.Gen.Migration do
   @behaviour Codegen.Generator
 
   @template_paths [".", :codegen]
   @source_dir "priv/templates/codegen.gen.schema"
 
-  alias Codegen.{Generator, Template}
-  alias Codegen.Helper.{Schema, Field}
+  require IEx
+  alias Codegen.Generator
+  alias Codegen.Template
+  alias Codegen.Helper.Schema
 
   def build(context_list, opts \\ []) when is_list(context_list) do
     for context <- context_list,
@@ -14,11 +16,18 @@ defmodule Codegen.Gen.Schema do
     end
   end
 
-  @impl Codegen.Generator
   def build(schema = %Schema{}, opts) do
     if Mix.Project.umbrella?() do
-      Mix.raise("A Schema can only generated inside an application directory")
+      Mix.raise("You can only generate a migration within an application directory")
     end
+
+    timestamp = Keyword.get(opts, :migration_timestamp, timestamp())
+
+    target_path =
+      Codegen.context_app_path(
+        Codegen.context_app(),
+        "priv/repo/migrations/#{timestamp}_create_#{schema.table}.exs"
+      )
 
     %Generator{
       source_dir: @source_dir,
@@ -26,9 +35,9 @@ defmodule Codegen.Gen.Schema do
       templates: [
         %Template{
           format: :eex,
-          source_path: "schema.ex",
-          target_path: schema.file,
-          force_overwrite?: false,
+          source_path: "migration.exs",
+          target_path: target_path,
+          force_overwrite?: true,
           assigns: [schema: schema]
         }
       ]
@@ -36,16 +45,14 @@ defmodule Codegen.Gen.Schema do
   end
 
   def generate(list) when is_list(list) do
-    ## TODO - Prompt for Conflicts
-
     Enum.each(list, fn opts ->
       Codegen.write_templates(opts.template_paths, opts.source_dir, opts.templates)
-      # post_install(opts)
     end)
   end
 
   @impl Codegen.Generator
   def generate(opts) when is_map(opts) do
+    IEx.pry()
     Codegen.write_templates(opts.template_paths, opts.source_dir, opts.templates)
 
     post_install(opts)
@@ -61,19 +68,6 @@ defmodule Codegen.Gen.Schema do
           $ mix ecto.migrate
       """
     end
-  end
-
-  @doc false
-  defp build_schema(args, parent_opts, help \\ __MODULE__) do
-    fields = Enum.map(args.fields, fn t -> Tuple.to_list(t) |> Enum.join(":") end)
-    opts = %{table: args.table, migration: args.migration, web: args.web}
-
-    opts =
-      parent_opts
-      |> Keyword.merge(Map.to_list(args))
-      |> put_context_app(args[:context_app])
-
-    Schema.new(args.name, args.table, fields, opts)
   end
 
   defp validate_args!([schema, plural | _] = args, help) do

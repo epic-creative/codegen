@@ -61,8 +61,7 @@ defmodule Mix.Tasks.Codegen.Run do
 
         Code.eval_file(file)
 
-        module.config()
-        |> Codegen.run()
+        Codegen.run(module)
 
       {_, _} ->
         Mix.raise(

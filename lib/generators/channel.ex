@@ -24,10 +24,7 @@ defmodule Codegen.Gen.Channel do
     test_prefix = Codegen.web_test_path(context_app)
 
     %{
-      # channel_name: name,
       context_app: context_app,
-      # web_prefix: web_prefix,
-      # test_prefix: test_prefix,
       assigns: assigns,
       source_dir: @source_dir,
       template_paths: @template_paths,

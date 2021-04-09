@@ -2,14 +2,57 @@ defmodule Codegen do
   @moduledoc """
   Library to generate Code for Elixir projects
   """
+  alias Codegen.Helper.{Context, Schema, Field}
+  alias Codegen.Generator
 
   @doc "Run the code generator with the passed configuration"
-  def run(config) do
-    generator = config.generator
+  def run(module) do
+    # Grab the Generator Definition
+    definition =
+      for obj <- module.define() do
+        define_helper(obj)
+      end
 
-    config.params
-    |> generator.build()
-    |> generator.generate()
+    # Build the list of Generators
+
+    module.generate()
+    |> Enum.reduce([], fn builder, acc ->
+      gen = build_generator(builder, definition)
+      acc ++ gen
+    end)
+    |> Enum.each(fn generator -> generate(generator) end)
+  end
+
+  def define_helper({:context, name, opts, schemas}) do
+    Context.new(name, schemas, opts)
+  end
+
+  def define_helper({:schema, name, opts, fields}) do
+    Schema.new(name, opts, fields)
+  end
+
+  def define_helper({:field, name, opts}) do
+    Field.new(name, opts)
+  end
+
+  def build_generator({:migration, opts}, definition) do
+    Codegen.Gen.Migration.build(definition, opts)
+  end
+
+  def build_generator({:schema, opts}, definition) do
+    Codegen.Gen.Schema.build(definition, opts)
+  end
+
+  def build_generator({:context, opts}, definition) do
+    Codegen.Gen.Context.build(definition, opts)
+  end
+
+  def build_generator(_opts, _definition) do
+    IO.puts("Please define a generator")
+  end
+
+  def generate(generator = %Generator{}) do
+    Codegen.write_templates(generator.template_paths, generator.source_dir, generator.templates)
   end
 
   @doc """
@@ -71,23 +114,24 @@ defmodule Codegen do
   the given binding.
   """
   def write_templates(apps, source_dir, mapping) when is_list(mapping) do
-    require IEx
     roots = Enum.map(apps, &to_app_source(&1, source_dir))
 
-    for {format, source_file_path, target, force_overwrite?, assigns} <- mapping do
+    for t <- mapping do
       source =
         Enum.find_value(roots, fn root ->
-          source = Path.join(root, source_file_path)
+          source = Path.join(root, t.source_path)
           if File.exists?(source), do: source
-        end) || raise "could not find #{source_file_path} in any of the sources"
+        end) || raise "could not find #{t.source_path} in any of the sources"
 
-      case format do
+      case t.format do
         :text ->
-          Mix.Generator.create_file(target, File.read!(source), force: force_overwrite?)
+          Mix.Generator.create_file(t.target_path, File.read!(t.source_path),
+            force: t.force_overwrite?
+          )
 
         :eex ->
-          Mix.Generator.create_file(target, EEx.eval_file(source, assigns),
-            force: force_overwrite?
+          Mix.Generator.create_file(t.target_path, EEx.eval_file(source, t.assigns),
+            force: t.force_overwrite?
           )
       end
     end

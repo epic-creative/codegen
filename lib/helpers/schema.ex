@@ -90,11 +90,12 @@ defmodule Codegen.Helper.Schema do
     file = Codegen.context_lib_path(app, basename <> ".ex")
 
     # Fields
-    {_, fields} =
-      Enum.map_reduce(fields, %{}, fn f, acc ->
-        field = Field.new(f)
-        {field, Map.put(acc, field.key, field)}
-      end)
+    # {_, computed_fields} =
+    #   Enum.map_reduce(fields, %{}, fn {:field, name, opts}, acc ->
+    #     field = Field.new(name, opts)
+    #     {field, Map.put(acc, field.key, field)}
+    #   end)
+    computed_fields = Enum.map(fields, fn {:field, name, opts} -> Field.new(name, opts) end)
 
     # Web
     web_namespace = opts[:web] && Codegen.Helper.Naming.camelize(opts[:web])
@@ -106,17 +107,17 @@ defmodule Codegen.Helper.Schema do
 
     schema = %Schema{
       # Fields
-      fields: fields,
+      fields: computed_fields,
 
       # Helpers
       file: file,
       opts: opts,
 
       # Flags
-      binary_id?: Map.get(opts, :binary_id, false),
-      embedded?: Map.get(opts, :embedded, false),
-      generate?: Map.get(opts, :generate, true),
-      migration?: Map.get(opts, :migration, true),
+      binary_id?: Keyword.get(opts, :binary_id, false),
+      embedded?: Keyword.get(opts, :embedded, false),
+      generate?: Keyword.get(opts, :generate, true),
+      migration?: Keyword.get(opts, :migration, true),
 
       # Migration
       migration_module: migration_module,
@@ -143,7 +144,7 @@ defmodule Codegen.Helper.Schema do
     }
 
     # IEx.pry()
-    IO.inspect(schema)
+    # IO.inspect(schema)
     schema
   end
 
